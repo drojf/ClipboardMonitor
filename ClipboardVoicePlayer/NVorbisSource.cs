@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace ClipboardVoicePlayer
 {
+    //Copied from this cscore example: https://github.com/filoe/cscore/blob/master/Samples/NVorbisIntegration/Program.cs
     public sealed class NVorbisSource : ISampleSource
     {
         private readonly Stream _stream;

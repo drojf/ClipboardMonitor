@@ -9,6 +9,8 @@ using System.Windows;
 using CSCore.Codecs;
 using CSCore.SoundOut;
 using CSCore;
+using CSCore.CoreAudioAPI;
+using Microsoft.Win32;
 
 namespace ClipboardVoicePlayer
 {
@@ -19,14 +21,22 @@ namespace ClipboardVoicePlayer
     /// </summary>
     public partial class MainWindow : Window
     {
-        readonly string SCAN_PATH = @"C:\temp\testfolder";
+        IWaveSource source;
+        WasapiOut soundOut;
 
-        string lastClipboardValue = String.Empty;
+        readonly string SCAN_PATH = @"C:\games\Steam\steamapps\common\Umineko Chiru 2018-05-19\voice";
+
+        UInt32 LastClipboardSequenceNumber;
         Dictionary<string, string> filenameToPathDict = new Dictionary<string, string>();
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        public static extern UInt32 GetClipboardSequenceNumber();
 
         public MainWindow()
         {
             InitializeComponent();
+
+            LastClipboardSequenceNumber = GetClipboardSequenceNumber();
 
             //Register the new codec so can play back ogg vorbis files
             CodecFactory.Instance.Register("ogg-vorbis", new CodecFactoryEntry(s => new NVorbisSource(s).ToWaveSource(), ".ogg"));
@@ -35,46 +45,61 @@ namespace ClipboardVoicePlayer
             foreach (string fullPath in Directory.EnumerateFiles(SCAN_PATH, "*.ogg", SearchOption.AllDirectories))
             {
                 string filename = Path.GetFileNameWithoutExtension(fullPath);
-                filenameToPathDict.Add(filename, fullPath);
-                Console.WriteLine($"Scanned [{filename} : {fullPath}]");
+                if(filenameToPathDict.ContainsKey(filename))
+                {
+                    Console.WriteLine($"WARNING: [{filename}] at [{fullPath}] already exists at [{filenameToPathDict[filename]}]");
+                }
+                else
+                {
+                    filenameToPathDict.Add(filename, fullPath);
+                }
+                //Console.WriteLine($"Scanned [{filename} : {fullPath}]");
             }
-            
+
             //setup 1s callback
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick1Second);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 1);
+            dispatcherTimer.Interval = new TimeSpan(days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: 500);
             dispatcherTimer.Start();
         }
 
         private void DispatcherTimer_Tick1Second(object sender, EventArgs e)
-        { 
-            string clipboard = Clipboard.GetText();
-            
-            //only execute on transitions of clipboard
-            if(clipboard == lastClipboardValue)
+        {
+            //only execute once for each 'copy'/ctrl-c press
+            UInt32 clipboardSequenceNumber = GetClipboardSequenceNumber();
+            if (clipboardSequenceNumber == LastClipboardSequenceNumber)
             {
                 return;
             }
             else
             {
-                lastClipboardValue = clipboard;
+                LastClipboardSequenceNumber = clipboardSequenceNumber;
             }
 
-            Console.WriteLine($"Clipboard: [{clipboard}]");
+            string clipboard = Clipboard.GetText();
+            Console.WriteLine($"Detected Clipboard Change: [{clipboard}]");
 
             bool fileFound = filenameToPathDict.TryGetValue(clipboard, out string filePath);
             if (fileFound)
             {
-                Console.WriteLine($"Trying to play: [{filePath}]");
-
-                using (var source = CodecFactory.Instance.GetCodec(filePath))
+                //clean up the old playback objects
+                if (source != null)
                 {
-                    using (WasapiOut soundOut = new WasapiOut())
-                    {
-                        soundOut.Initialize(source);
-                        soundOut.Play();
-                    }
+                    source.Dispose();
                 }
+
+                if (soundOut != null)
+                {
+                    soundOut.Dispose();
+                }
+
+                Console.WriteLine($"Playing: [{filePath}]");
+
+                source = CodecFactory.Instance.GetCodec(filePath);
+                soundOut = new WasapiOut();
+
+                soundOut.Initialize(source);
+                soundOut.Play();
             }
             else
             {
