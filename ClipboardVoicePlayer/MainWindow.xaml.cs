@@ -21,40 +21,25 @@ namespace ClipboardVoicePlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        FolderScanner folderScanner;
+        ClipboardMonitor clipboardMonitor;
+
         IWaveSource source;
         WasapiOut soundOut;
 
         readonly string SCAN_PATH = @"C:\games\Steam\steamapps\common\Umineko Chiru 2018-05-19\voice";
 
-        UInt32 LastClipboardSequenceNumber;
-        Dictionary<string, string> filenameToPathDict = new Dictionary<string, string>();
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        public static extern UInt32 GetClipboardSequenceNumber();
-
         public MainWindow()
         {
             InitializeComponent();
 
-            LastClipboardSequenceNumber = GetClipboardSequenceNumber();
+            clipboardMonitor = new ClipboardMonitor();
+
+            folderScanner = new FolderScanner();
+            folderScanner.ScanFolder(SCAN_PATH);
 
             //Register the new codec so can play back ogg vorbis files
             CodecFactory.Instance.Register("ogg-vorbis", new CodecFactoryEntry(s => new NVorbisSource(s).ToWaveSource(), ".ogg"));
-
-            //scan folder for voice files
-            foreach (string fullPath in Directory.EnumerateFiles(SCAN_PATH, "*.ogg", SearchOption.AllDirectories))
-            {
-                string filename = Path.GetFileNameWithoutExtension(fullPath);
-                if(filenameToPathDict.ContainsKey(filename))
-                {
-                    Console.WriteLine($"WARNING: [{filename}] at [{fullPath}] already exists at [{filenameToPathDict[filename]}]");
-                }
-                else
-                {
-                    filenameToPathDict.Add(filename, fullPath);
-                }
-                //Console.WriteLine($"Scanned [{filename} : {fullPath}]");
-            }
 
             //setup 1s callback
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
@@ -66,20 +51,15 @@ namespace ClipboardVoicePlayer
         private void DispatcherTimer_Tick1Second(object sender, EventArgs e)
         {
             //only execute once for each 'copy'/ctrl-c press
-            UInt32 clipboardSequenceNumber = GetClipboardSequenceNumber();
-            if (clipboardSequenceNumber == LastClipboardSequenceNumber)
+            if (clipboardMonitor.ClipboardChanged())
             {
                 return;
-            }
-            else
-            {
-                LastClipboardSequenceNumber = clipboardSequenceNumber;
             }
 
             string clipboard = Clipboard.GetText();
             Console.WriteLine($"Detected Clipboard Change: [{clipboard}]");
 
-            bool fileFound = filenameToPathDict.TryGetValue(clipboard, out string filePath);
+            bool fileFound = folderScanner.TryGetValue(clipboard, out string filePath);
             if (fileFound)
             {
                 //clean up the old playback objects
