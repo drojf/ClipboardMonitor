@@ -20,8 +20,6 @@ namespace ClipboardVoicePlayer
         ClipboardMonitor clipboardMonitor;
         EasyCSCorePlayer player;
 
-        readonly string SCAN_PATH = @"C:\games\Steam\steamapps\common\Umineko Chiru 2018-05-19\voice";
-
         public MainWindow()
         {
             InitializeComponent();
@@ -30,14 +28,16 @@ namespace ClipboardVoicePlayer
 
             clipboardMonitor = new ClipboardMonitor();
 
-            folderScanner = new FolderScanner();
-            folderScanner.ScanFolder(SCAN_PATH);
-
             //setup 1s callback
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
             dispatcherTimer.Tick += new EventHandler(DispatcherTimer_Tick1Second);
             dispatcherTimer.Interval = new TimeSpan(days: 0, hours: 0, minutes: 0, seconds: 0, milliseconds: 500);
             dispatcherTimer.Start();
+        }
+
+        private string GetUserSelectedPath()
+        {
+            return PathComboBox.Text;
         }
 
         private void DispatcherTimer_Tick1Second(object sender, EventArgs e)
@@ -51,14 +51,25 @@ namespace ClipboardVoicePlayer
             string clipboard = Clipboard.GetText();
             Console.WriteLine($"Detected Clipboard Change: [{clipboard}]");
 
-            bool fileFound = folderScanner.TryGetValue(clipboard, out string filePath);
-            if (fileFound)
+            bool pathExists = false;
+            try
             {
-                player.PlayAudio(filePath);
+                string path = Path.Combine(GetUserSelectedPath(), clipboard);
+                if(File.Exists(path))
+                {
+                    pathExists = true;
+                    Console.WriteLine($"Trying to play: [{path}]");
+                    player.PlayAudio(path);
+                }
             }
-            else
+            catch(Exception exception)
             {
-                Console.WriteLine($"Couldn't find : [{clipboard}]");
+                Console.WriteLine(exception);
+            }
+
+            if (!pathExists)
+            {
+                Console.WriteLine($"Couldn't find : [{clipboard}] in folder [{GetUserSelectedPath()}]");
             }
         }
     }

@@ -33,9 +33,9 @@ namespace ClipboardVoicePlayer
                 soundOut.Dispose();
             }
 
-            Console.WriteLine($"Playing: [{filePath}]");
+            Console.WriteLine($"Playing: [{audioPath}]");
 
-            source = CodecFactory.Instance.GetCodec(filePath);
+            source = CodecFactory.Instance.GetCodec(audioPath);
             soundOut = new WasapiOut();
 
             soundOut.Initialize(source);

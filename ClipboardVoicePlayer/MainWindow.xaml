@@ -7,6 +7,8 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
+        <ComboBox Name="PathComboBox" Text="C:\Example\Path\Here" HorizontalAlignment="Left" Margin="10,59,0,0" VerticalAlignment="Top" Width="497" IsEditable="True"/>
+        <ComboBox Text="Unused" HorizontalAlignment="Left" Margin="10,122,0,0" VerticalAlignment="Top" Width="497" IsEditable="True"/>
+
     </Grid>
 </Window>
