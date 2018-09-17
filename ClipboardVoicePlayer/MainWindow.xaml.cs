@@ -6,11 +6,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using CSCore.Codecs;
-using CSCore.SoundOut;
-using CSCore;
-using CSCore.CoreAudioAPI;
-using Microsoft.Win32;
 
 namespace ClipboardVoicePlayer
 {
@@ -23,9 +18,7 @@ namespace ClipboardVoicePlayer
     {
         FolderScanner folderScanner;
         ClipboardMonitor clipboardMonitor;
-
-        IWaveSource source;
-        WasapiOut soundOut;
+        EasyCSCorePlayer player;
 
         readonly string SCAN_PATH = @"C:\games\Steam\steamapps\common\Umineko Chiru 2018-05-19\voice";
 
@@ -33,13 +26,12 @@ namespace ClipboardVoicePlayer
         {
             InitializeComponent();
 
+            player = new EasyCSCorePlayer();
+
             clipboardMonitor = new ClipboardMonitor();
 
             folderScanner = new FolderScanner();
             folderScanner.ScanFolder(SCAN_PATH);
-
-            //Register the new codec so can play back ogg vorbis files
-            CodecFactory.Instance.Register("ogg-vorbis", new CodecFactoryEntry(s => new NVorbisSource(s).ToWaveSource(), ".ogg"));
 
             //setup 1s callback
             System.Windows.Threading.DispatcherTimer dispatcherTimer = new System.Windows.Threading.DispatcherTimer();
@@ -62,24 +54,7 @@ namespace ClipboardVoicePlayer
             bool fileFound = folderScanner.TryGetValue(clipboard, out string filePath);
             if (fileFound)
             {
-                //clean up the old playback objects
-                if (source != null)
-                {
-                    source.Dispose();
-                }
-
-                if (soundOut != null)
-                {
-                    soundOut.Dispose();
-                }
-
-                Console.WriteLine($"Playing: [{filePath}]");
-
-                source = CodecFactory.Instance.GetCodec(filePath);
-                soundOut = new WasapiOut();
-
-                soundOut.Initialize(source);
-                soundOut.Play();
+                player.PlayAudio(filePath);
             }
             else
             {
