@@ -5,10 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ClipboardVoicePlayer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="570" Width="522.5" Closing="Window_Closing">
     <Grid>
-        <ComboBox Name="PathComboBox" Text="C:\Example\Path\Here" HorizontalAlignment="Left" Margin="10,59,0,0" VerticalAlignment="Top" Width="497" IsEditable="True"/>
+        <ComboBox Name="PathComboBox" Text="C:\Example\Path\Here" HorizontalAlignment="Left" Margin="92,32,0,0" VerticalAlignment="Top" Width="415" IsEditable="True"/>
         <ComboBox Text="Unused" HorizontalAlignment="Left" Margin="10,122,0,0" VerticalAlignment="Top" Width="497" IsEditable="True"/>
+        <Label Content="Scan Folder:" HorizontalAlignment="Left" Margin="10,28,0,0" VerticalAlignment="Top" Width="77"/>
+        <Label Content="Clipboard:" HorizontalAlignment="Left" Margin="10,194,0,0" VerticalAlignment="Top"/>
+        <Label Content="File Path:" HorizontalAlignment="Left" Margin="10,315,0,0" VerticalAlignment="Top" Width="64"/>
+        <Label Content="Guess:" HorizontalAlignment="Left" Margin="7,287,0,0" VerticalAlignment="Top" Width="64"/>
+        <TextBox x:Name="ClipboardTextbox" HorizontalAlignment="Left" Height="88" Margin="92,198,0,0" TextWrapping="Wrap" Text="Clipboard" VerticalAlignment="Top" Width="415"/>
+        <TextBox x:Name="GuessTextbox" HorizontalAlignment="Left" Height="23" Margin="92,291,0,0" TextWrapping="Wrap" Text="Guess" VerticalAlignment="Top" Width="415"/>
+        <TextBox x:Name="FilePathTextBox" HorizontalAlignment="Left" Height="125" Margin="92,319,0,0" TextWrapping="Wrap" Text="File Path" VerticalAlignment="Top" Width="415"/>
 
     </Grid>
 </Window>
