@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ClipboardVoicePlayer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="570" Width="522.5" Closing="Window_Closing">
+        Title="MainWindow" Height="570" Width="532.5" Closing="Window_Closing">
     <Grid>
         <ComboBox Name="PathComboBox" Text="C:\Example\Path\Here" HorizontalAlignment="Left" Margin="92,32,0,0" VerticalAlignment="Top" Width="415" IsEditable="True"/>
         <ComboBox Text="Unused" HorizontalAlignment="Left" Margin="10,122,0,0" VerticalAlignment="Top" Width="497" IsEditable="True"/>

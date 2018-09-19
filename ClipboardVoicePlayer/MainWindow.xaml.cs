@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -21,6 +22,8 @@ namespace ClipboardVoicePlayer
     /// </summary>
     public partial class MainWindow : Window
     {
+        //NOTE: file path regex doesn't support spaces
+        readonly static Regex FUZZY_FILE_PATH_REGEX = new Regex(@"(\w+\\)*\w+\.\w+");
         readonly static string TOML_PATH = "conf.toml";
 
         FolderScanner folderScanner;
@@ -69,7 +72,6 @@ namespace ClipboardVoicePlayer
 
             //restore GUI with config
             SetUserSelectedPath(config.ScanFolder);
-
         }
 
         private void SaveConfig()
@@ -89,40 +91,91 @@ namespace ClipboardVoicePlayer
             PathComboBox.Text = path;
         }
 
-        private void DispatcherTimer_Tick1Second(object sender, EventArgs e)
+        //note: returns null if path could not be determined. Reason for exception is provided in the 'out' argument.
+        //TODO: handle if multiple paths in clipboard?
+        private string GetPathFromClipboardAndScanFolder(string scanFolder, string clipboard, out string errorReason)
         {
-            //only execute once for each 'copy'/ctrl-c press
-            if (clipboardMonitor.ClipboardChanged())
+            Match match = FUZZY_FILE_PATH_REGEX.Match(clipboard);
+            string guess = match.Value;
+
+            //check a path is found in the clipboard
+            if(!match.Success || guess.Trim() == string.Empty)
             {
-                return;
+                errorReason = "Couldn't find a path in clipboard text";
+                return null;
             }
 
-            string clipboard = Clipboard.GetText();
-            ClipboardTextbox.Text = clipboard;
-            //Console.WriteLine($"Detected Clipboard Change: [{clipboard}]");
-            string pathMessage = "Error";
-            bool pathExists = false;
+            //check strings combine to a valid path
+            string fullPath = null;
             try
             {
-                string path = Path.Combine(GetUserSelectedPath(), clipboard);
-                if(File.Exists(path))
+                fullPath = Path.Combine(GetUserSelectedPath(), guess);
+            }
+            catch(Exception e)
+            {
+                errorReason = $"Invalid combined path: [{GetUserSelectedPath()}]/[{guess}]";
+                return null;
+            }
+
+            //check file exists on disk
+            if (!File.Exists(fullPath))
+            {
+                errorReason = $"Path [{fullPath}] valid but couldn't be found on disk!";
+                return null;
+            }
+
+            errorReason = $"Path valid and exists";
+            return fullPath;
+        }
+
+        private void DispatcherTimer_Tick1Second(object sender, EventArgs e)
+        {
+            try
+            {
+                //only execute once for each 'copy'/ctrl-c press
+                if (clipboardMonitor.ClipboardChanged())
                 {
-                    pathExists = true;
-                    pathMessage = $"{path}";
-                    player.PlayAudio(path);
+                    return;
                 }
-            }
-            catch(Exception exception)
-            {
-                Console.WriteLine(exception);
-            }
 
-            if (!pathExists)
-            {
-                pathMessage = $"Couldn't find: [{GetUserSelectedPath()}]/[{clipboard}]";
-            }
+                //See https://stackoverflow.com/questions/12769264/openclipboard-failed-when-copy-pasting-data-from-wpf-datagrid
+                string clipboard = null;
+                try
+                {
+                    clipboard = Clipboard.GetText();
+                    ClipboardTextbox.Text = clipboard;
+                }
+                catch(Exception clipboardException)
+                {
+                    FilePathTextBox.Text = $"Clipboard Exception occured: {clipboardException.ToString()}";
+                    return;
+                }
 
-            FilePathTextBox.Text = pathMessage;
+                //get path and check valid
+                string pathToPlay = GetPathFromClipboardAndScanFolder(GetUserSelectedPath(), clipboard, out string errorReason);
+                if (pathToPlay == null)
+                {
+                    FilePathTextBox.Text = errorReason;
+                    return;
+                }
+
+                //try to play the audio
+                try
+                {
+                    player.PlayAudio(pathToPlay);
+                }
+                catch (Exception exception)
+                {
+                    FilePathTextBox.Text = $"Couldn't play audio {pathToPlay}: {exception.ToString()}";
+                    return;
+                }
+
+                FilePathTextBox.Text = pathToPlay;
+            }
+            catch(Exception unknownException)
+            {
+                FilePathTextBox.Text = $"Unknown Exception occured: {unknownException.ToString()}";
+            }
         }
 
     }
