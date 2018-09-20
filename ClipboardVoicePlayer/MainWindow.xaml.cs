@@ -157,6 +157,74 @@ namespace ClipboardVoicePlayer
             return fullPath;
         }
 
+        private string ModifyDigitsOfPath(string path, int difference)
+        {
+            //remove the file extension
+            string[] splitPath = path.Split(new char[] { '.' }, count: 2);
+
+            string extensionWithoutDot;
+            string pathWithoutExtension;
+            if(splitPath.Length == 1)
+            {
+                //no file extension
+                extensionWithoutDot = "";
+                pathWithoutExtension = path;
+            }
+            else
+            {
+                extensionWithoutDot = splitPath[1];
+                pathWithoutExtension = splitPath[0];
+            }
+
+            //get the numbers at the end of the string
+            SplitStringOnTrailingDigits(pathWithoutExtension, out string pathWithoutExtensionHead, out string trailingDigitsAsString);
+
+            int trailingDigits = Int32.Parse(trailingDigitsAsString);
+
+            return $"{pathWithoutExtensionHead}{trailingDigits + difference}.{extensionWithoutDot}";
+        }
+
+        //splits a string into the section before any trailing digits, and the trailing digits
+        //TODO: need to handle the cases like: kum_1e65_i? just return false or with an error.
+        public void SplitStringOnTrailingDigits(string s, out string head, out string trailingDigits)
+        {
+            //count from end of string to start of string, stopping at the first non-digit
+            int firstNonDigitIndex = s.Length - 1;
+            for (; firstNonDigitIndex >= 0; firstNonDigitIndex--)
+            {
+                if (!Char.IsDigit(s[firstNonDigitIndex]))
+                {
+                    break;
+                }
+            }
+
+            head = s.Substring(0, firstNonDigitIndex + 1); //length of the non-digit section is lastNonDigitIndex + 1
+            trailingDigits = s.Substring(firstNonDigitIndex + 1);            //the last non-digit is at index 'lastNonDigitIndex', therefore the first digit is at 'lastNonDigitIndex + 1'
+        }
+
+        private void ManualPlay_Click(object sender, RoutedEventArgs e)
+        {
+            TryPlayNextAudio();
+        }
+
+        private void TryPlayNextAudio()
+        {
+            try
+            {
+                player.PlayAudio(Path.Combine(GetUserSelectedPath(), PlayNextTextBox.Text));
+            }
+            catch
+            {
+                //do nothing for now if this fails
+            }
+        }
+
+        private void IncrementManualPlayBox(string original)
+        {
+            string newPathToPlay = ModifyDigitsOfPath(original, 1);
+            PlayNextTextBox.Text = newPathToPlay;
+        }
+
         private void DispatcherTimer_Tick1Second(object sender, EventArgs e)
         {
             try
@@ -203,6 +271,8 @@ namespace ClipboardVoicePlayer
                 }
 
                 FilePathTextBox.Text = pathToPlay;
+
+                IncrementManualPlayBox(GuessTextbox.Text);            //update the 'next to play' box
             }
             catch(Exception unknownException)
             {
@@ -210,5 +280,10 @@ namespace ClipboardVoicePlayer
             }
         }
 
+        private void NextAudio_Click(object sender, RoutedEventArgs e)
+        {
+            IncrementManualPlayBox(PlayNextTextBox.Text);
+            TryPlayNextAudio();
+        }
     }
 }
