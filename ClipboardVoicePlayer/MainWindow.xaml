@@ -5,16 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ClipboardVoicePlayer"
         mc:Ignorable="d"
-        Title="ClipboardAudioPlayer" Height="372.356" Width="543.727" Closing="Window_Closing">
+        Title="ClipboardAudioPlayer" Height="407.908" Width="543.727" Closing="Window_Closing">
     <Grid>
-        <ComboBox Name="PathComboBox" Text="C:\Example\Path\Here" HorizontalAlignment="Left" Margin="92,32,0,0" VerticalAlignment="Top" Width="422" IsEditable="True"/>
-        <Label Content="Scan Folder:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="10,28,0,0" VerticalAlignment="Top" Width="77"/>
-        <Label Content="Clipboard:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="17,67,0,0" VerticalAlignment="Top"/>
-        <Label Content="File Path:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="17,188,0,0" VerticalAlignment="Top" Width="64"/>
-        <Label Content="Guess:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="14,160,0,0" VerticalAlignment="Top" Width="64"/>
-        <TextBox x:Name="ClipboardTextbox" HorizontalAlignment="Left" Height="88" Margin="92,71,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="422"/>
-        <TextBox x:Name="GuessTextbox" HorizontalAlignment="Left" Height="23" Margin="92,164,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="422"/>
-        <TextBox x:Name="FilePathTextBox" HorizontalAlignment="Left" Height="125" Margin="92,192,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="422"/>
+        <ComboBox Name="PathComboBox" Text="C:\Example\Path\Here" HorizontalAlignment="Left" Margin="92,10,0,0" VerticalAlignment="Top" Width="422" IsEditable="True"/>
+        <Label Content="Scan Folder:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="10,6,0,0" VerticalAlignment="Top" Width="77"/>
+        <Label Content="Clipboard:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="17,85,0,0" VerticalAlignment="Top"/>
+        <Label Content="File Path:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="17,206,0,0" VerticalAlignment="Top" Width="64"/>
+        <Label Content="Guess:" HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="14,178,0,0" VerticalAlignment="Top" Width="64"/>
+        <TextBox x:Name="ClipboardTextbox" HorizontalAlignment="Left" Height="88" Margin="92,89,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="422"/>
+        <TextBox x:Name="GuessTextbox" HorizontalAlignment="Left" Height="23" Margin="92,182,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="422"/>
+        <TextBox x:Name="FilePathTextBox" HorizontalAlignment="Left" Height="125" Margin="92,210,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="422"/>
+        <Label Content="Extension to add (.ogg, .mp3...). Leave blank for no extension." HorizontalContentAlignment="Right"  HorizontalAlignment="Left" Margin="17,37,0,0" VerticalAlignment="Top" Width="340"/>
+        <ComboBox x:Name="AddExtensionComboBox" Text=".ogg" HorizontalAlignment="Left" Margin="362,39,0,0" VerticalAlignment="Top" Width="152" IsEditable="True"/>
+        <Label Content="Settings are saved when program closed to [conf.toml]" HorizontalContentAlignment="Center"  HorizontalAlignment="Left" Margin="10,340,0,0" VerticalAlignment="Top" Width="516"/>
+        <Separator HorizontalAlignment="Left" Height="8" Margin="10,68,0,0" VerticalAlignment="Top" Width="504"/>
 
     </Grid>
 </Window>

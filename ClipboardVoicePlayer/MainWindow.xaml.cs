@@ -13,6 +13,7 @@ namespace ClipboardVoicePlayer
     public class Config
     {
         public string ScanFolder { get; set; }
+        public string AddExtension { get; set; }
     }
 
     ///NOTE: this program is based on this cscore example: https://github.com/filoe/cscore/blob/master/Samples/NVorbisIntegration/Program.cs
@@ -23,7 +24,10 @@ namespace ClipboardVoicePlayer
     public partial class MainWindow : Window
     {
         //NOTE: file path regex doesn't support spaces, and requires a file extension to be present
-        readonly static Regex FUZZY_FILE_PATH_REGEX = new Regex(@"(\w+\\)*\w+\.\w+");
+        readonly static Regex FUZZY_FILE_PATH_REGEX = new Regex(@"(\w+[\\\/])+\w+(\.\w+)?");
+        //Alternate regex which matches just a file without any slashes
+        readonly static Regex FUZZY_FILE_REGEX = new Regex(@"\w+\.\w+");
+
         readonly static string TOML_PATH = "conf.toml";
 
         FolderScanner folderScanner;
@@ -72,12 +76,14 @@ namespace ClipboardVoicePlayer
 
             //restore GUI with config
             SetUserSelectedPath(config.ScanFolder);
+            SetUserExtension(config.AddExtension);
         }
 
         private void SaveConfig()
         {
             Config config = new Config();
             config.ScanFolder = GetUserSelectedPath();
+            config.AddExtension = GetUserExtension();
             Nett.Toml.WriteFile(config, TOML_PATH);
         }
 
@@ -91,12 +97,35 @@ namespace ClipboardVoicePlayer
             PathComboBox.Text = path;
         }
 
+        private string GetUserExtension()
+        {
+            return AddExtensionComboBox.Text;
+        }
+
+        private void SetUserExtension(string ext)
+        {
+            AddExtensionComboBox.Text = ext;
+        }
+
+        private void ClearOutputTextBoxes()
+        {
+            ClipboardTextbox.Text = "N/A";
+            GuessTextbox.Text = "N/A";
+            FilePathTextBox.Text = "N/A";
+        }
+
         //note: returns null if path could not be determined. Reason for exception is provided in the 'out' argument.
         //TODO: handle if multiple paths in clipboard?
-        private string GetPathFromClipboardAndScanFolder(string scanFolder, string clipboard, out string errorReason, out string guess)
+        private string GetPathFromClipboardAndScanFolder(string scanFolder, string clipboard, out string errorReason, out string guess, string addExtension="")
         {
+            //try both regexes
             Match match = FUZZY_FILE_PATH_REGEX.Match(clipboard);
-            guess = match.Value;
+            if(!match.Success)
+            {
+                match = FUZZY_FILE_REGEX.Match(clipboard);
+            }
+
+            guess = match.Value + addExtension;
 
             //check a path is found in the clipboard
             if(!match.Success || guess.Trim() == string.Empty)
@@ -138,6 +167,8 @@ namespace ClipboardVoicePlayer
                     return;
                 }
 
+                ClearOutputTextBoxes();
+
                 //See https://stackoverflow.com/questions/12769264/openclipboard-failed-when-copy-pasting-data-from-wpf-datagrid
                 string clipboard = null;
                 try
@@ -152,7 +183,7 @@ namespace ClipboardVoicePlayer
                 }
 
                 //get path and check valid
-                string pathToPlay = GetPathFromClipboardAndScanFolder(GetUserSelectedPath(), clipboard, out string errorReason, out string guess);
+                string pathToPlay = GetPathFromClipboardAndScanFolder(GetUserSelectedPath(), clipboard, out string errorReason, out string guess, addExtension:GetUserExtension());
                 if (pathToPlay == null)
                 {
                     FilePathTextBox.Text = errorReason;
