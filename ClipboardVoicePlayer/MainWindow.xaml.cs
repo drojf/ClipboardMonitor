@@ -22,7 +22,7 @@ namespace ClipboardVoicePlayer
     /// </summary>
     public partial class MainWindow : Window
     {
-        //NOTE: file path regex doesn't support spaces
+        //NOTE: file path regex doesn't support spaces, and requires a file extension to be present
         readonly static Regex FUZZY_FILE_PATH_REGEX = new Regex(@"(\w+\\)*\w+\.\w+");
         readonly static string TOML_PATH = "conf.toml";
 
@@ -93,10 +93,10 @@ namespace ClipboardVoicePlayer
 
         //note: returns null if path could not be determined. Reason for exception is provided in the 'out' argument.
         //TODO: handle if multiple paths in clipboard?
-        private string GetPathFromClipboardAndScanFolder(string scanFolder, string clipboard, out string errorReason)
+        private string GetPathFromClipboardAndScanFolder(string scanFolder, string clipboard, out string errorReason, out string guess)
         {
             Match match = FUZZY_FILE_PATH_REGEX.Match(clipboard);
-            string guess = match.Value;
+            guess = match.Value;
 
             //check a path is found in the clipboard
             if(!match.Success || guess.Trim() == string.Empty)
@@ -152,12 +152,13 @@ namespace ClipboardVoicePlayer
                 }
 
                 //get path and check valid
-                string pathToPlay = GetPathFromClipboardAndScanFolder(GetUserSelectedPath(), clipboard, out string errorReason);
+                string pathToPlay = GetPathFromClipboardAndScanFolder(GetUserSelectedPath(), clipboard, out string errorReason, out string guess);
                 if (pathToPlay == null)
                 {
                     FilePathTextBox.Text = errorReason;
                     return;
                 }
+                GuessTextbox.Text = guess;
 
                 //try to play the audio
                 try
